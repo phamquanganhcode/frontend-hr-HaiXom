@@ -86,38 +86,61 @@ const EmployeeSalary = () => {
         );
 
         // LOGIC MAPPING: Chuyển đổi dữ liệu từ Database sang giao diện
+        // --- PHẦN XỬ LÝ BACKEND ĐỂ CHỐNG LỖI GIAO DIỆN ---
+        const payroll = response?.payroll || {}; // Phòng hờ nếu ko có object payroll
+        const attendances = response?.attendances || []; // Luôn là mảng để .map ko lỗi
+
         const formattedData = {
           summary: {
-            estimatedSalary:
-              Number(response.payroll?.final_salary || 0).toLocaleString() ||
-              "0",
-            // Ép kiểu về Number trước khi định dạng
-            baseSalary:
-              Number(
-                response.payroll?.base_salary_amount || 0,
-              ).toLocaleString() || "0",
-            allowance:
-              response.payroll?.allowance_amount?.toLocaleString() || "0",
-            bonus: response.total_bonus?.toLocaleString() || "0",
-            deduction:
-              response.payroll?.deduction_amount?.toLocaleString() || "0",
-            totalWorkDays: response.payroll?.total_work_days || 0,
-            overtimeHours: response.total_overtime || 0,
-            lateCount:
-              response.attendances?.filter((a) => a.late_minutes > 0).length ||
-              0,
-            advanceAmount: response.total_advance?.toLocaleString() || "0",
+            // Ép kiểu Number và dùng toLocaleString để hiện 6.000.000 thay vì 6000000
+            estimatedSalary: Number(payroll.final_salary || 0).toLocaleString(
+              "vi-VN",
+            ),
+            baseSalary: Number(payroll.base_salary_amount || 0).toLocaleString(
+              "vi-VN",
+            ),
+            allowance: Number(payroll.allowance_amount || 0).toLocaleString(
+              "vi-VN",
+            ),
+
+            // Thưởng và Ứng lương thường là tổng hợp từ mảng khác, nên để mặc định là 0
+            bonus: Number(response?.total_bonus || 0).toLocaleString("vi-VN"),
+            advanceAmount: Number(response?.total_advance || 0).toLocaleString(
+              "vi-VN",
+            ),
+
+            // Khấu trừ (Deduction)
+            deduction: Number(payroll.deduction_amount || 0).toLocaleString(
+              "vi-VN",
+            ),
+
+            // Các chỉ số đếm (Số nguyên)
+            totalWorkDays: Number(payroll.total_work_days || 0),
+            overtimeHours: Number(response?.total_overtime || 0),
+
+            // Logic đếm số lần đi muộn từ danh sách chấm công hằng ngày
+            lateCount: attendances.filter(
+              (att) => Number(att.late_minutes || 0) > 0,
+            ).length,
           },
           // Ánh xạ từ bảng DailyAttendance
-          history:
-            response.attendances?.map((att) => ({
-              date: new Date(att.date).toLocaleDateString("vi-VN"),
-              shift: att.shift_name || "Ca làm", // Lấy từ bảng ShiftDefinition
-              checkIn: att.check_in_time || "--:--",
-              checkOut: att.check_out_time || "--:--",
-              status:
-                att.late_minutes > 0 ? `Muộn ${att.late_minutes}p` : "Đúng giờ",
-            })) || [],
+          // Ánh xạ danh sách chấm công
+          history: attendances.map((att) => ({
+            // Định dạng ngày: 2024-05-22 -> 22/05/2024
+            date: att.date
+              ? new Date(att.date).toLocaleDateString("vi-VN")
+              : "---",
+            shift: att.shift_name || "Chưa gán ca",
+            checkIn: att.check_in_time || "--:--",
+            checkOut: att.check_out_time || "--:--",
+            // Hiển thị trạng thái dựa trên số phút muộn
+            status:
+              Number(att.late_minutes || 0) > 0
+                ? `Muộn ${att.late_minutes}p`
+                : att.check_in_time
+                  ? "Đúng giờ"
+                  : "Nghỉ",
+          })),
         };
 
         setSalaryData(formattedData);
