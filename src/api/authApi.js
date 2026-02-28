@@ -1,19 +1,22 @@
 import axiosClient from "./axiosClient";
 
 const authApi = {
-  // Đăng nhập dựa trên username và password (tương ứng bảng Account)
+  // Đăng nhập trả về Token và thông tin Account cơ bản
   login: (credentials) => {
     const url = '/auth/login';
     return axiosClient.post(url, credentials);
   },
 
-  // Lấy thông tin cá nhân và vai trò (join bảng Employee và Account)
+  /**
+   * Lấy thông tin cá nhân đầy đủ của người đang đăng nhập.
+   * Backend cần JOIN bảng Account -> Employee -> Branch & Position
+   * Để frontend dùng được: data?.employee?.full_name, data?.employee?.branch?.name
+   */
   getMe: () => {
     const url = '/auth/me';
     return axiosClient.get(url);
   },
 
-  // Đăng xuất để xóa session trên Backend
   logout: () => {
     const url = '/auth/logout';
     return axiosClient.post(url);

@@ -1,13 +1,14 @@
-// Để lấy dữ liệu chi tiết hồ sơ từ Backend Laravel
-
 import axiosClient from "./axiosClient";
 
 const userApi = {
+  // Đồng bộ với authApi.getMe để lấy đầy đủ thông tin lồng nhau
   getProfile: () => {
     return axiosClient.get('/user/profile');
   },
-  logout: () => {
-    return axiosClient.post('/auth/logout');
+  
+  // Cập nhật thông tin cá nhân (nếu có tính năng sửa hồ sơ)
+  updateProfile: (data) => {
+    return axiosClient.put('/user/profile', data);
   }
 };
 
