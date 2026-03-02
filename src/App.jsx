@@ -13,15 +13,23 @@ import Login from './pages/Login';
  * Nếu chưa, đá văng ra trang Login.
  */
 const ProtectedRoute = () => {
-  // Kiểm tra token trong localStorage (hoặc sessionStorage/Cookie tùy bạn dùng)
-  const isAuthenticated = localStorage.getItem('token'); 
+  const token = localStorage.getItem('token'); 
+
+  // Kiểm tra token có tồn tại và không phải là chuỗi rác
+  const isAuthenticated = token && token !== 'undefined' && token !== 'null';
 
   if (!isAuthenticated) {
-    // replace để người dùng không bấm 'Back' quay lại được trang vừa bị chặn
+    // Nếu token rác, dọn dẹp luôn cho sạch máy
+    if (token) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user_data');
+    }
+    
+    // Đá về login, dùng replace để không thể bấm 'Back' quay lại
     return <Navigate to="/login" replace />;
   }
 
-  // Nếu đã đăng nhập, cho phép truy cập vào các trang con
+  // Nếu ok, cho vào trang con (Dashboard, Salary, v.v.)
   return <Outlet />;
 };
 
