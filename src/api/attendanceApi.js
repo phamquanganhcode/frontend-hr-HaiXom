@@ -35,17 +35,7 @@ const attendanceApi = {
   logAttendance: (attendanceData) => {
     // attendanceData nên chứa: employee_id, date, check_in_time, device_id...
     return axiosClient.post('/attendance/log', attendanceData);
-  },
-
-  // Lấy cấu hình cho Modal
-  getRegistrationConfig: (date) => {
-    return axiosClient.get('/work-schedules/registration-config', { params: { date } });
-  },
-
-  // Gửi lệnh đăng ký
-  submitShiftRegistrations: (payload) => {
-    return axiosClient.post('/work-schedules/register', payload);
-  },
+  }
 };
 
 export default attendanceApi;

@@ -5,6 +5,7 @@ import {
   Clock,
   MapPin,
   Calendar as CalendarIcon,
+  Info,
   Loader2,
   Lock,
   CheckCircle2,
@@ -13,122 +14,75 @@ import attendanceApi from "../../api/attendanceApi";
 import RegisterShiftModal from "./RegisterShiftModal";
 import authApi from "../../api/authApi";
 
-
-
 const EmployeeSchedule = () => {
   const [userType, setUserType] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showFullTimeWarning, setShowFullTimeWarning] = useState(false);
   const [currentWeek, setCurrentWeek] = useState(new Date());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Mặc định loading khi mới vào trang
   const [scheduleData, setScheduleData] = useState([]);
-  const [registrationConfig, setRegistrationConfig] = useState(null);
-  const [employeeId, setEmployeeId] = useState("");
 
-    const fetchRegistrationConfig = async () => {
-    try {
-      // Tính ngày của tuần tiếp theo
-      const nextWeek = new Date(currentWeek);
-      nextWeek.setDate(nextWeek.getDate() + 7);
-      
-      // Format ngày ra chuẩn YYYY-MM-DD
-      const year = nextWeek.getFullYear();
-      const month = String(nextWeek.getMonth() + 1).padStart(2, '0');
-      const day = String(nextWeek.getDate()).padStart(2, '0');
-      const dateStr = `${year}-${month}-${day}`;
-
-      // Gọi API lấy dữ liệu cấu hình
-      const res = await attendanceApi.getRegistrationConfig(dateStr);
-      
-      // Lưu vào state để truyền xuống Modal
-      setRegistrationConfig(res);
-    } catch (error) {
-      console.error("Lỗi tải cấu hình đăng ký:", error);
-    }
-  };
-  
-  const handleRegistrationSubmit = async (selectedShifts) => {
-    try {
-      // 👉 Tạo payload chuẩn form bạn yêu cầu
-      const payload = { 
-        employeeId: employeeId,
-        weekRange: registrationConfig?.weekRange || `${weekDays[0].toLocaleDateString('vi-VN')} - ${weekDays[6].toLocaleDateString('vi-VN')}`,
-        registrations: selectedShifts 
-      };
-
-      // 1. Log ra để kiểm tra trước khi gửi
-      console.log("🚀 CHUẨN BỊ GỬI PAYLOAD LÊN BACKEND:");
-      console.log(JSON.stringify(payload, null, 2));
-
-      // 2. Gửi API
-      await attendanceApi.submitShiftRegistrations(payload);
-      
-      // 3. Log thành công
-      console.log("✅ ĐĂNG KÝ CA THÀNH CÔNG VÀO CSDL!");
-      
-      // 4. Lấy lại config Modal
-      fetchRegistrationConfig(); 
-      
-      // 5. Cập nhật lại lịch làm việc chính để hiện ca mới đăng ký
-      const dateStr = formatDateLocal(currentWeek);
-      const response = await attendanceApi.getWeeklySchedule(null, dateStr);
-      setScheduleData(Array.isArray(response) ? response : []);
-
-    } catch (error) {
-      console.error("❌ Lỗi khi gửi đăng ký:", error);
-      throw error;
-    }
-  };
-  
-  
-  // --- HELPER: Định dạng ngày YYYY-MM-DD theo giờ địa phương (Tránh lỗi múi giờ) ---
-  const formatDateLocal = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
+  // --- MOCK DATA (Dữ liệu giả lập) ---
+  const mockSchedule = [
+    { date: "2026-03-02", shiftName: "Ca Sáng", time: "08:00 - 14:00", location: "Quầy Bar" },
+    { date: "2026-03-02", shiftName: "Ca Tối", time: "18:00 - 22:00", location: "Khu vực A" },
+    { date: "2026-03-04", shiftName: "Ca Gãy", time: "10:00 - 14:00 & 17:00 - 21:00", location: "Sảnh chính" },
+    { date: "2026-03-06", shiftName: "Ca Chiều", time: "14:00 - 22:00", location: "Kho" },
+  ];
   // --- 1. LẤY THÔNG TIN USER KHI LOAD TRANG ---
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await authApi.getMe(); 
+        const response = await authApi.getProfile(); 
         const role = response?.data?.role || 'part';
-        // 👉 Lấy mã nhân viên (Tùy thuộc Backend trả về tên trường là gì, ví dụ: employee_code)
-        setEmployeeId(response?.data?.employee?.employee_code || "EMP123");
         setUserType(role);
       } catch (error) {
         console.error("Lỗi lấy thông tin user:", error);
+        console.warn("Sử dụng User giả lập (Part-time)");
         setUserType("part"); 
       }
     };
     fetchUserProfile();
   }, []);
 
-  // --- 2. LẤY LỊCH LÀM VIỆC THEO TUẦN (Sửa lỗi tham số và lệch ngày) ---
+  // --- 2. LẤY LỊCH LÀM VIỆC THEO TUẦN ---
   useEffect(() => {
     const fetchSchedule = async () => {
       setLoading(true);
+      setScheduleData([]);
       try {
-        // ✅ Sửa: Dùng formatDateLocal để gửi ngày chuẩn YYYY-MM-DD lên Backend
-        const dateStr = formatDateLocal(currentWeek);
-        
-        // ✅ Sửa: Truyền null vào vị trí đầu tiên để URL ra đúng start_date
-        const response = await attendanceApi.getWeeklySchedule(null, dateStr);
-        
+        // Dùng định dạng local YYYY-MM-DD sẽ an toàn hơn.
+        const dateString = currentWeek.toLocaleDateString('en-CA'); 
+        const response = await attendanceApi.getWeeklySchedule(dateString);
+        // CẬP NHẬT: Chỉ set dữ liệu nếu API trả về mảng, nếu không set mảng rỗng
         setScheduleData(Array.isArray(response) ? response : []);
       } catch (error) {
         console.error("Lỗi lấy lịch làm việc:", error);
-        setScheduleData([]);
+        console.warn("Không lấy được API, sử dụng Mock Data");
+        setScheduleData(mockSchedule);
       } finally {
         setLoading(false);
       }
     };
     fetchSchedule();
   }, [currentWeek]);
+// 1. Tạo state để giữ dữ liệu đã đăng ký lần 1
+const [previouslyRegistered, setPreviouslyRegistered] = useState({});
 
-  // --- 3. LOGIC TÍNH TOÁN (Đã sửa lỗi ReferenceError gây trắng màn hình) ---
+// 2. Fetch dữ liệu này khi currentWeek thay đổi
+useEffect(() => {
+  const fetchMyRegistrations = async () => {
+    try {
+      // Giả sử có API lấy nguyện vọng đã gửi
+      const response = await attendanceApi.getMyRegistrations(currentWeek); 
+      setPreviouslyRegistered(response); // format: { "date": ["shiftId1", "shiftId2"] }
+    } catch {
+      console.log("Chưa có dữ liệu đăng ký cũ");
+    }
+  };
+  fetchMyRegistrations();
+}, [currentWeek]);
+  // --- 3. LOGIC TÍNH TOÁN---
   const getDaysInWeek = (date) => {
     const start = new Date(date);
     const day = start.getDay();
@@ -141,30 +95,32 @@ const EmployeeSchedule = () => {
     });
   };
 
-  const weekDays = getDaysInWeek(currentWeek);
+  const weekDays = useMemo(() => getDaysInWeek(currentWeek), [currentWeek]);
+const totalWeeklyHours = useMemo(() => {
+  let totalMinutes = 0;
+  
+  // Tạo danh sách các chuỗi ngày YYYY-MM-DD của tuần hiện tại để đối chiếu
+  const currentWeekDateStrings = weekDays.map(d => d.toLocaleDateString('en-CA'));
 
-  const totalWeeklyHours = useMemo(() => {
-    let totalMinutes = 0;
-    if (!Array.isArray(scheduleData)) return "0.0";
+  scheduleData.forEach((shift) => {
+    // CHỈ TÍNH nếu ngày của shift nằm trong tuần đang xem
+    if (!shift.time || !currentWeekDateStrings.includes(shift.date)) return;
 
-    scheduleData.forEach((shift) => {
-      if (!shift.time) return;
-      const segments = shift.time.split("&");
-      segments.forEach((seg) => {
-        const times = seg.trim().split("-");
-        if (times.length === 2) {
-          const [start, end] = times.map((t) => t.trim());
-          const [startH, startM] = start.split(":").map(Number);
-          const [endH, endM] = end.split(":").map(Number);
-          let duration = endH * 60 + endM - (startH * 60 + startM);
-          if (duration < 0) duration += 24 * 60;
-          // ✅ Sửa: Xóa dòng gây lỗi totalWeeklyHours &&...
-          totalMinutes += duration;
-        }
-      });
+    const segments = shift.time.split("&");
+    segments.forEach((seg) => {
+      const times = seg.trim().split("-");
+      if (times.length === 2) {
+        const [start, end] = times.map((t) => t.trim());
+        const [startH, startM] = start.split(":").map(Number);
+        const [endH, endM] = end.split(":").map(Number);
+        let duration = endH * 60 + endM - (startH * 60 + startM);
+        if (duration < 0) duration += 24 * 60;
+        totalMinutes += duration;
+      }
     });
-    return (totalMinutes / 60).toFixed(1);
-  }, [scheduleData]);
+  });
+  return (totalMinutes / 60).toFixed(1);
+}, [scheduleData, weekDays]); // Thêm weekDays vào dependency
 
   const handleRegisterClick = () => {
     if (!userType) return;
@@ -172,7 +128,6 @@ const EmployeeSchedule = () => {
       setShowFullTimeWarning(true);
       setTimeout(() => setShowFullTimeWarning(false), 3000);
     } else {
-      fetchRegistrationConfig();
       setIsModalOpen(true);
     }
   };
@@ -182,8 +137,8 @@ const EmployeeSchedule = () => {
       
       {/* WARNING POPUP */}
       {showFullTimeWarning && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl flex flex-col items-center gap-4 max-w-xs text-center border-b-4 border-amber-500">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl flex flex-col items-center gap-4 animate-in zoom-in duration-300 max-w-xs text-center border-b-4 border-amber-500">
             <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
               <Lock size={32} className="text-amber-600" />
             </div>
@@ -192,6 +147,9 @@ const EmployeeSchedule = () => {
               <p className="text-[11px] text-slate-500 font-bold leading-relaxed uppercase">
                 Tài khoản <span className="text-amber-600">Full-time</span> không cần đăng ký ca.
               </p>
+            </div>
+            <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden mt-2">
+              <div className="h-full bg-amber-500 animate-out slide-out-to-left fill-mode-forwards duration-[3000ms]" />
             </div>
           </div>
         </div>
@@ -236,15 +194,8 @@ const EmployeeSchedule = () => {
 
         <div className="divide-y divide-slate-50">
           {weekDays.map((day, idx) => {
-            // ✅ Sửa: Format ngày Local (YYYY-MM-DD)
-            const dateStr = formatDateLocal(day);
-            
-            // ✅ Sửa: So khớp linh hoạt với cả chuỗi ISO (T00:00:00) từ Backend
-            const shifts = scheduleData.filter((s) => {
-              const itemDate = s.date.includes('T') ? s.date.split('T')[0] : s.date;
-              return itemDate === dateStr;
-            });
-            
+            const dateStr = day.toISOString().split("T")[0];
+            const shifts = scheduleData.filter((s) => s.date === dateStr);
             const isToday = new Date().toDateString() === day.toDateString();
 
             return (
@@ -260,22 +211,15 @@ const EmployeeSchedule = () => {
                         <div key={sIdx} className="bg-white border border-slate-100 p-4 rounded-[1.5rem] shadow-sm flex items-start gap-4">
                           <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0"><Clock size={20} /></div>
                           <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-black text-slate-800 uppercase text-sm">{shift.shiftName}</h4>
-                              <CheckCircle2 size={14} className="text-emerald-500" />
-                            </div>
+                            <div className="flex items-center gap-2"><h4 className="font-black text-slate-800 uppercase text-sm">{shift.shiftName}</h4><CheckCircle2 size={14} className="text-emerald-500" /></div>
                             <p className="text-xs font-bold text-indigo-600">{shift.time}</p>
-                            <div className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
-                              <MapPin size={12} className="text-rose-400" /> {shift.location}
-                            </div>
+                            <div className="flex items-center gap-1 text-[11px] text-slate-500 font-medium"><MapPin size={12} className="text-rose-400" />{shift.location}</div>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="h-full flex items-center">
-                      <p className="text-xs font-bold text-slate-200 italic uppercase">Nghỉ</p>
-                    </div>
+                    <div className="h-full flex items-center"><p className="text-xs font-bold text-slate-200 italic uppercase">Nghỉ</p></div>
                   )}
                 </div>
               </div>
@@ -286,7 +230,7 @@ const EmployeeSchedule = () => {
 
       {/* FOOTER STATS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-indigo-600 p-6 rounded-[2rem] text-white shadow-lg">
+        <div className="bg-indigo-600 p-6 rounded-[2rem] text-white shadow-lg shadow-indigo-100">
           <CalendarIcon className="mb-3 opacity-50" size={24} />
           <p className="text-[10px] font-black uppercase opacity-70">Tổng giờ dự kiến</p>
           <p className="text-2xl font-black">{totalWeeklyHours} Giờ / Tuần</p>
@@ -298,21 +242,15 @@ const EmployeeSchedule = () => {
         </div>
       </div>
 
-      {/* MODAL ĐĂNG KÝ */}
-      {/* MODAL ĐĂNG KÝ */}
+      {/* MODAL ĐĂNG KÝ (Sử dụng dữ liệu thật) */}
       {userType && (
         <RegisterShiftModal
           isOpen={isModalOpen}
+          initialSelected={previouslyRegistered}
           onClose={() => setIsModalOpen(false)}
           userType={userType}
-          weekRange={registrationConfig?.weekRange || `${weekDays[0].toLocaleDateString('vi-VN')} - ${weekDays[6].toLocaleDateString('vi-VN')}`}
-          
-          // 👉 2. THÊM 5 DÒNG NÀY ĐỂ BƠM DỮ LIỆU & HÀM SUBMIT VÀO MODAL
-          realShiftTypes={registrationConfig?.realShiftTypes}
-          realDays={registrationConfig?.realDays}
-          shiftDemands={registrationConfig?.shiftDemands}
-          fixedOffShifts={registrationConfig?.fixedOffShifts}
-          onSubmit={handleRegistrationSubmit}
+          weekRange={`${weekDays[0].toLocaleDateString('vi-VN')} - ${weekDays[6].toLocaleDateString('vi-VN')}`}
+          // Khi API thật sẵn sàng, bạn có thể fetch thêm dữ liệu Demand/FixedOff tại đây
         />
       )}
     </div>
