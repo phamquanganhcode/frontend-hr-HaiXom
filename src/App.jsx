@@ -9,7 +9,7 @@ import ManagerLayout from './components/Layouts/Manager/ManagerLayout';
 import ManagerProfile from './pages/Manager/ManagerProfile';
 import SchedulingPage from './pages/Manager/Scheduling/index';
 import StaffManager from './pages/Manager/Staff/StaffManager';
-
+import Dashboard from "./pages/Manager/Home/Dashboard";
 
 const ProtectedRoute = () => {
   const token = localStorage.getItem('token'); 
@@ -46,7 +46,7 @@ function App() {
           {/* ROUTE CHO QUẢN LÝ (Đã đưa vào trong Protected) */}
           <Route path="/manager" element={<ManagerLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<div>Trang chủ Quản lý</div>} />
+            <Route path="dashboard" element={<Dashboard/>} />
             <Route path="staff" element={<StaffManager/>} />
             <Route path="scheduling" element={<SchedulingPage />} />
             <Route path="profile" element={<ManagerProfile />} />
