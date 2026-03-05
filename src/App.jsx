@@ -5,31 +5,19 @@ import EmployeeProfile from './pages/Employee/Profile';
 import EmployeeSalary from './pages/Employee/Salary';
 import EmployeeSchedule from './pages/Employee/Schedule';
 import Login from './pages/Login';
+import ManagerLayout from './components/Layouts/Manager/ManagerLayout';
 
-
-/**
- * COMPONENT BẢO VỆ ROUTE
- * Kiểm tra xem có Token (đã đăng nhập) chưa. 
- * Nếu chưa, đá văng ra trang Login.
- */
 const ProtectedRoute = () => {
   const token = localStorage.getItem('token'); 
-
-  // Kiểm tra token có tồn tại và không phải là chuỗi rác
   const isAuthenticated = token && token !== 'undefined' && token !== 'null';
 
   if (!isAuthenticated) {
-    // Nếu token rác, dọn dẹp luôn cho sạch máy
     if (token) {
       localStorage.removeItem('token');
       localStorage.removeItem('user_data');
     }
-    
-    // Đá về login, dùng replace để không thể bấm 'Back' quay lại
     return <Navigate to="/login" replace />;
   }
-
-  // Nếu ok, cho vào trang con (Dashboard, Salary, v.v.)
   return <Outlet />;
 };
 
@@ -37,31 +25,50 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* 1. Trang Login công khai */}
         <Route path="/login" element={<Login />} />
 
-        {/* 2. Nhóm các trang CẦN ĐĂNG NHẬP mới vào được */}
+        {/* NHÓM CẦN ĐĂNG NHẬP */}
         <Route element={<ProtectedRoute />}>
+          
+          {/* ROUTE CHO NHÂN VIÊN */}
           <Route path="/employee" element={<EmployeeLayout />}>
-            {/* Mặc định khi vào /employee sẽ chuyển tới dashboard */}
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<EmployeeDashboard />} />
             <Route path="profile" element={<EmployeeProfile />} />
             <Route path="salary" element={<EmployeeSalary />} />
             <Route path="schedule" element={<EmployeeSchedule />} />
-
-            {/* Các trang khác như /employee/salary sẽ thêm ở đây */}
           </Route>
+
+          {/* ROUTE CHO QUẢN LÝ (Đã đưa vào trong Protected) */}
+          <Route path="/manager" element={<ManagerLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<div>Trang chủ Quản lý</div>} />
+            <Route path="staff" element={<div>Quản lý nhân sự</div>} />
+            <Route path="scheduling" element={<div>Hệ thống xếp ca</div>} />
+            <Route path="profile" element={<div>Hồ sơ quản lý</div>} />
+          </Route>
+          
         </Route>
 
-        {/* 3. Điều hướng mặc định khi mở App */}
-        <Route path="/" element={<Navigate to="/employee/dashboard" replace />} />
+        {/* ĐIỀU HƯỚNG THÔNG MINH TẠI TRANG CHỦ */}
+        <Route path="/" element={<HomeRedirect />} />
         
-        {/* 4. Trang 404 (Nếu cần) - Chuyển về login nếu gõ bậy bạ */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
 }
+
+/**
+ * Component hỗ trợ điều hướng dựa trên Role khi người dùng vào "/"
+ */
+const HomeRedirect = () => {
+  const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
+  const role = userData?.role; // Giả sử backend lưu role trong user_data
+
+  if (!role) return <Navigate to="/login" replace />;
+  if (role === 2) return <Navigate to="/manager/dashboard" replace />;
+  return <Navigate to="/employee/dashboard" replace />;
+};
 
 export default App;
