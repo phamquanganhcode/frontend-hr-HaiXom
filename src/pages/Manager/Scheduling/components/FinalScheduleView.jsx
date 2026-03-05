@@ -132,7 +132,7 @@ const FinalScheduleView = ({ realData }) => {
                                   <div className={`absolute z-[100] w-48 p-4 bg-slate-900 text-white rounded-2xl shadow-2xl opacity-0 invisible group-hover/staff:opacity-100 group-hover/staff:visible transition-all duration-200 pointer-events-none border border-white/10 ${tooltipClasses}`}>
                                     <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/10">
                                       <div className="p-1.5 bg-indigo-500 rounded-lg"><Info size={12} /></div>
-                                      <p className="text-[10px] font-black uppercase tracking-tighter">Chi tiết</p>
+                                      <p className="text-[10px] font-black uppercase tracking-tighter">Thông tin chi tiết</p>
                                     </div>
                                     <p className="text-[11px] font-black text-indigo-400 mb-1">{info.fullName}</p>
                                     <p className="text-[10px] text-slate-400 font-bold mb-0.5">Vai trò: <span className="text-white">{info.role}</span></p>
