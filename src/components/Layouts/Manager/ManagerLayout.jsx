@@ -22,15 +22,39 @@ const ManagerLayout = () => {
         setData(actualData);
       } catch (error) {
         console.error("Lỗi lấy thông tin Profile Manager:", error);
-        // Mock data chuẩn cấu trúc userData?.branch?.name
-        setData({ 
-          employee: { 
-            full_name: "Trần Quản Lý", 
-            avatar: "TQL",
-            branch: {
-              name: "Cơ sở Xã Đàn"
-            }
-          },
+        // Dữ liệu giả lập chi tiết để test giao diện
+  setData({ 
+    employee: { 
+      full_name: "Trần Quản Lý", 
+      employee_code: "QL001",
+      avatar: "TQL",
+      status: "active", // Trạng thái: active (còn làm), inactive (nghỉ)
+      role: "Trưởng chi nhánh",
+      phonenumber: "0988 777 666",
+      email: "quanly.haixom@gmail.com",
+      base_salary: 15000000,
+      type: "full",
+      branch: {
+        name: "Cơ sở Xã Đàn"
+      },
+      // Dữ liệu lịch sử thuyên chuyển
+      job_history: [
+        {
+          id: 1,
+          branch_name: "Cơ sở Giải Phóng",
+          position_name: "Giám sát tầng",
+          start_date: "01/01/2024",
+          end_date: "31/12/2025",
+        },
+        {
+          id: 2,
+          branch_name: "Cơ sở Xã Đàn",
+          position_name: "Trưởng chi nhánh",
+          start_date: "01/01/2026",
+          end_date: null, // null nghĩa là hiện tại
+        }
+      ]
+    },
           announcement: "Hôm nay có 2 yêu cầu xếp ca mới cần duyệt." 
         });
       } finally {

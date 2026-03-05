@@ -6,6 +6,7 @@ import EmployeeSalary from './pages/Employee/Salary';
 import EmployeeSchedule from './pages/Employee/Schedule';
 import Login from './pages/Login';
 import ManagerLayout from './components/Layouts/Manager/ManagerLayout';
+import ManagerProfile from './pages/Manager/ManagerProfile';
 
 const ProtectedRoute = () => {
   const token = localStorage.getItem('token'); 
@@ -45,7 +46,7 @@ function App() {
             <Route path="dashboard" element={<div>Trang chủ Quản lý</div>} />
             <Route path="staff" element={<div>Quản lý nhân sự</div>} />
             <Route path="scheduling" element={<div>Hệ thống xếp ca</div>} />
-            <Route path="profile" element={<div>Hồ sơ quản lý</div>} />
+            <Route path="profile" element={<ManagerProfile />} />
           </Route>
           
         </Route>
