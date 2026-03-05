@@ -150,7 +150,7 @@ const RegisterShiftModal = ({
             <div className="space-y-1">
               {" "}
               {/* Thêm space-y để dãn dòng */}
-              <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight leading-none">
+              <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight leading-none">
                 Đăng ký nguyện vọng
               </h2>
               <div className="text-sm font-black text-indigo-500 tracking-wide min-h-[20px] flex items-center">
