@@ -179,7 +179,7 @@ const Login = () => {
 
           {/* Note nhỏ để bạn nhớ tài khoản test */}
           <p className="text-[10px] text-center text-gray-400">
-            Gợi ý: nhanvien - 123 / admin - 123 / manager - 123
+            Gợi ý: nhanvienban - 123 / nhanvienbep - 123 / manager - 123
           </p>
         </form>
       </div>

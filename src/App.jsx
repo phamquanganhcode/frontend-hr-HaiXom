@@ -4,6 +4,8 @@ import EmployeeDashboard from './pages/Employee/Dashboard';
 import EmployeeProfile from './pages/Employee/Profile';
 import EmployeeSalary from './pages/Employee/Salary';
 import EmployeeSchedule from './pages/Employee/Schedule';
+import ShiftMarket from "./pages/Employee/ShiftMarket";
+
 import Login from './pages/Login';
 import ManagerLayout from './components/Layouts/Manager/ManagerLayout';
 import ManagerProfile from './pages/Manager/ManagerProfile';
@@ -41,6 +43,7 @@ function App() {
             <Route path="profile" element={<EmployeeProfile />} />
             <Route path="salary" element={<EmployeeSalary />} />
             <Route path="schedule" element={<EmployeeSchedule />} />
+            <Route path="exchange" element={<ShiftMarket />} />
           </Route>
 
           {/* ROUTE CHO QUẢN LÝ (Đã đưa vào trong Protected) */}
