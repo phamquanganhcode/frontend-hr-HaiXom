@@ -19,8 +19,13 @@ const Login = () => {
 
   // --- DATA GIẢ LẬP (SỬ DỤNG KHI CHƯA CÓ BACKEND) ---
   const MOCK_USERS = [
-    { username: "accounting", password: "123", role: 1, name: "Kế toán chi nhánh" },
-    
+    {
+      username: "accounting",
+      password: "123",
+      role: 1,
+      name: "Kế toán chi nhánh",
+    },
+
     { username: "manager", password: "123", role: 2, name: "Quản lý cơ sở" },
     { username: "admin", password: "123", role: 3, name: "Quản trị viên" },
     {
@@ -80,7 +85,7 @@ const Login = () => {
           JSON.stringify({
             name: foundUser.name,
             role: foundUser.role,
-            username: foundUser.username
+            username: foundUser.username,
           }),
         );
 
@@ -94,18 +99,18 @@ const Login = () => {
     }
   };
 
-// Tách hàm điều hướng để dùng chung cho cả 2 trường hợp
-const redirectByRole = (role) => {
-  if (role === 1) {
-    navigate("/accounting/dashboard"); 
-  } else if (role === 2) {
-    navigate("/manager/dashboard");
-  }else if (role === 3) {
-    navigate("/admin/dashboard");
-  } else {
-    navigate("/employee/dashboard");
-  }
-};
+  // Tách hàm điều hướng để dùng chung cho cả 2 trường hợp
+  const redirectByRole = (role) => {
+    if (role === 1) {
+      navigate("/accounting/dashboard");
+    } else if (role === 2) {
+      navigate("/manager/dashboard");
+    } else if (role === 3) {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/employee/dashboard");
+    }
+  };
 
   return (
     <div
@@ -187,7 +192,7 @@ const redirectByRole = (role) => {
 
           {/* Note nhỏ để bạn nhớ tài khoản test */}
           <p className="text-[10px] text-center text-gray-400">
-            Gợi ý: nhanvienban - 123 / nhanvienbep - 123 / manager - 123
+            Gợi ý: nhanvienban - 123 / nhanvienbep - 123 / manager - 1231222
           </p>
         </form>
       </div>
